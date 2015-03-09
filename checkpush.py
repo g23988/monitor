@@ -7,9 +7,9 @@ SUB: curl -s -v 'http://10.78.78.88/sub/978'
 PUB: curl -s -v -X POST 'http://10.78.78.88/pub?id=978' -d 'Hello_Kitty'
 '''
 
-import http.client,urllib.request, urllib.parse
+import http.client, urllib.request, urllib.parse
 
-host = '192.168.25.135'
+host = '10.78.78.88'
 channel = '978'
 messageIndex="test"
 messageText="ok"

@@ -22,3 +22,4 @@ resp = conn.getresponse()
 data = resp.read()
 print(data.strip())
 conn.close()
+

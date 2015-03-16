@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#coding = utf-8
+# -*- coding: UTF-8 -*-
 '''
 pure push channel test for NginX push Module
 NginX Push Stream Module: https://github.com/wandenberg/nginx-push-stream-module
@@ -11,47 +11,41 @@ import http.client, urllib.request, urllib.parse, threading, requests
 
 host = "10.78.78.88"
 channel = "978"
-messageIndex="test"
-messageText="ok"
-"""
-class SubWait(threading.Thread):
-	def __init__(self, host, channel):
-		super(SubWait, self).__init__()
-		self.host = host
-		self.channel = channel
-		self.subresp = ""
-	def SubInfo(self):
-		'''
-		#settings = { 'interval': '0', 'count':'1' }
-		url = 'http://10.78.78.88/sub/978'
-		#r = requests.get(url, params=settings, stream=True)
-		r = requests.get(url)
-		for line in r.iter_lines():
-			if line:
-				print(line)
-		return(line)'''
-		conn = http.client.HTTPConnection(self.host)
-		conn.request('GET', '/sub/'+self.channel)
-		resp = conn.getresponse()
-		self.subresp = resp.read()
-		return(self.subresp)
-"""
-class PubData(threading.Thread):
-	def __init__(self, host, channel):
-		super(PubData, self).__init__()
-		self.host = host
-		self.channel = channel
-		self.pubresp = ""
-	def PubInfo(self):
-		conn = http.client.HTTPConnection(self.host)
-		params = urllib.parse.urlencode({"test":"OK"})
-		conn.request('POST', '/pub?id='+channel, params)
-		resp = conn.getresponse()
-		#return(resp.status, resp.reason)
-		self.pubresp = resp.read()
-		return(conn.request)
-		conn.close()
+content = {channel:"OK"}
 
+class SUBSCRIBE(threading.Thread):
+	def __init__(self, threadID):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+	def run(self):
+		subconn = http.client.HTTPConnection(host)
+		subconn.request('GET', '/sub/'+channel)
+		subresp = subconn.getresponse()
+		subdata = subresp.read()
+		return(subdata)
 
-#SubWait(host, channel).start()
-PubData(host, channel).start()
+def PUBLISH():
+	pubconn = http.client.HTTPConnection(host)
+	pubparams = urllib.parse.urlencode(content)
+	pubconn.request('POST', '/pub?id='+channel, pubparams)
+	pubresp = pubconn.getresponse()
+	#print(pubresp.status, pubresp.reason)
+	pubdata = pubresp.read()
+	return(pubdata.strip())
+	pubconn.close()
+
+threadLock = threading.Lock()
+threads = []
+SubThread = SUBSCRIBE(1)
+SubThread.start()
+
+#count = 0
+
+while(SubThread.isAlive()):
+	PUBLISH()
+#	if subdata == pubdata.strip():
+
+#	count+=1
+#	print(str(count))
+
+SubThread.join()

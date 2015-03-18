@@ -5,6 +5,7 @@ Created on 2015年3月17日
 '''
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
+
 '''
 pure push channel test for NginX push Module
 NginX Push Stream Module: https://github.com/wandenberg/nginx-push-stream-module
@@ -12,12 +13,19 @@ SUB: curl -s -v 'http://10.78.78.88/sub/978'
 PUB: curl -s -v -X POST 'http://10.78.78.88/pub?id=978' -d 'Hello_Kitty'
 '''
 
-import http.client, urllib.request, urllib.parse, threading
+import http.client, urllib.request, urllib.parse, threading, os, sys
+
 
 host = "192.168.25.135"
 channel = "978"
 content = {channel:"OK"}
 getresult = ''
+flag = True
+#Lock
+mylock = threading.RLock()
+
+
+
 
 
 class SUBSCRIBE(threading.Thread):
@@ -25,12 +33,22 @@ class SUBSCRIBE(threading.Thread):
         threading.Thread.__init__(self)
         self.threadID = threadID
     def run(self):
-        global getresult
-        subconn = http.client.HTTPConnection(host)
-        subconn.request('GET', '/sub/'+channel)
-        subresp = subconn.getresponse()
-        subdata = str(subresp.read())
-        getresult = subdata
+        try:
+            global getresult
+            global flag
+            subconn = http.client.HTTPConnection(host,80,timeout=1)
+            subconn.request('GET', '/sub/'+channel)
+            mylock.acquire()
+            #改變flag
+            flag = False
+            subresp = subconn.getresponse()
+            subdata = str(subresp.read())
+            getresult = subdata
+            mylock.release()
+        except:
+            return Exception
+        finally:
+            subconn.close()
 #        return(subdata)
 
 def PUBLISH():
@@ -38,38 +56,30 @@ def PUBLISH():
     pubparams = urllib.parse.urlencode(content)
     pubconn.request('POST', '/pub?id='+channel, pubparams)
     pubresp = pubconn.getresponse()
-    #print(pubresp.status, pubresp.reason)
     pubdata = pubresp.read()
     return(pubdata.strip())
     pubconn.close()
 
-
-#threadLock = threading.Lock()
-#threadLock.acquire()
-#threads = []
-SubThread = SUBSCRIBE(1)
-print('啟動server')
-SubThread.start()
-print('送出post')
-PUBLISH()
-SubThread.join()
-#a = str(getresult)
-#type(a)
-while (True):
-    #print(type(getresult))
-    if getresult == "b'978=OK'":
-        print('比對正常')
-        break
-print('ㄧ切安好!!!!!!!!!!!!')
-#count = 0
-
-
+try:
+    
+    SubThread = SUBSCRIBE(1)
+    print('啟動server')
+    SubThread.start()
+    #等到sub被建立以後才送出post
+    while True:
+        if flag == False:  
+            print('送出post')
+            PUBLISH()
+            break
+    
+    while True:
+        if getresult == "b'978=OK'":
+            print('比對正常')
+            break
+    print('流程完成')
+except:
+    print('錯誤連線,請檢察參數')
 
 
-#while(SubThread.isAlive()):
-#    print('123')
-#    PUBLISH()
-#    if subdata == pubdata.strip():
 
-#    count+=1
-#    print(str(count))
+

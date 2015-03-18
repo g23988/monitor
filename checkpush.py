@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
 '''
 Created on 2015年3月17日
 
 @author: weiwei
 '''
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
+
 
 '''
 pure push channel test for NginX push Module
@@ -18,8 +19,8 @@ import http.client, urllib.request, urllib.parse, threading, os, sys
 
 host = "192.168.25.135"
 channel = "978"
-content = {channel:"OK"}
-getresult = ''
+content = {host:channel}
+getresult = b''
 flag = True
 #Lock
 mylock = threading.RLock()
@@ -42,7 +43,7 @@ class SUBSCRIBE(threading.Thread):
             #改變flag
             flag = False
             subresp = subconn.getresponse()
-            subdata = str(subresp.read())
+            subdata = subresp.read()
             getresult = subdata
             mylock.release()
         except:
@@ -57,7 +58,6 @@ def PUBLISH():
     pubconn.request('POST', '/pub?id='+channel, pubparams)
     pubresp = pubconn.getresponse()
     pubdata = pubresp.read()
-    return(pubdata.strip())
     pubconn.close()
 
 try:
@@ -73,12 +73,13 @@ try:
             break
     
     while True:
-        if getresult == "b'978=OK'":
+        if getresult.decode('UTF-8') == host+"="+channel:
             print('比對正常')
             break
     print('流程完成')
-except:
-    print('錯誤連線,請檢察參數')
+except EOFError:
+    print(EOFError)
+    #print('錯誤連線,請檢察參數')
 
 
 

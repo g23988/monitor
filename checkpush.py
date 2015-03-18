@@ -50,14 +50,11 @@ class SUBSCRIBE(threading.Thread):
             return Exception
         finally:
             subconn.close()
-#        return(subdata)
 
 def PUBLISH():
     pubconn = http.client.HTTPConnection(host)
     pubparams = urllib.parse.urlencode(content)
     pubconn.request('POST', '/pub?id='+channel, pubparams)
-    pubresp = pubconn.getresponse()
-    pubdata = pubresp.read()
     pubconn.close()
 
 try:
